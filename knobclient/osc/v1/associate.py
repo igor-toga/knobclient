@@ -66,7 +66,7 @@ class CreateAssociate(command.ShowOne):
         knob_client = self.app.client_manager.knob
 
         try:
-            data = knob_client.targets.create(parsed_args.service,
+            data = knob_client.associates.create(parsed_args.service,
                                               parsed_args.hostname)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Target not found: %s')
@@ -111,7 +111,7 @@ class DeleteAssociate(command.Command):
         self.log.debug('take_action(%s)', parsed_args)
         knob_client = self.app.client_manager.knob
         try:
-            knob_client.targets.delete(parsed_args.service,
+            knob_client.associates.delete(parsed_args.service,
                                                parsed_args.hostname)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Hostname <%(hostname)s> not found '
@@ -155,15 +155,15 @@ class ListAssociate(command.Lister):
             "type": parsed_args.type,
             "all_projects": parsed_args.all_projects
         }
-        data = knob_client.targets.list(**params)
+        data = knob_client.associates.list(**params)
         result = []
         for resource_type, values in data.items():
             if isinstance(values, list):
                 # Cope with pre-1.0 service APIs
-                targets = values
+                associates = values
             else:
-                targets = values['targets']
-            for s in targets:
+                associates = values['associates']
+            for s in associates:
                 options = []
                 for o in s.get('options', []):
                     options.append(

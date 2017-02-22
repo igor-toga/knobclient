@@ -53,7 +53,7 @@ class ListService(command.Lister):
             "type": parsed_args.type,
             "all_projects": parsed_args.all_projects
         }
-        data = knob_client.targets.list(**params)
+        data = knob_client.services.list(**params)
         result = []
         for resource_type, values in data.items():
             if isinstance(values, list):
