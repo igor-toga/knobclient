@@ -18,9 +18,9 @@ from knobclient.common import utils
 from knobclient import exc
 
 
-class Target(base.Resource):
+class Delegate(base.Resource):
     def __repr__(self):
-        return "<Target %s>" % self._info
+        return "<Delegate %s>" % self._info
 
     def create(self, **fields):
         return self.manager.create(self.identifier, **fields)
@@ -42,36 +42,36 @@ class Target(base.Resource):
             self._add_details(new._info)
             
 
-class TargetsManager(base.BaseManager):
-    resource_class = Target
+class DelegatesManager(base.BaseManager):
+    resource_class = Delegate
 
     def list(self, **kwargs):
-        """Get a list of targets."""
+        """Get a list of delegates."""
 
     def create(self, **kwargs):
-        """Create a target."""
+        """Create a delegate."""
         headers = self.client.credentials_headers()
-        resp = self.client.post('/targets',
+        resp = self.client.post('/delegates',
                                 data=kwargs, headers=headers)
         body = utils.get_response_body(resp)
         return body
 
-    def update(self, target_id, **kwargs):
-        """Update a target."""
+    def update(self, delegate_id, **kwargs):
+        """Update a delegate."""
         headers = self.client.credentials_headers()
         if kwargs.pop('existing', None):
-            self.client.patch('/targets/%s' % target_id, data=kwargs,
+            self.client.patch('/delegates/%s' % delegate_id, data=kwargs,
                               headers=headers)
         else:
-            self.client.put('/targets/%s' % target_id, data=kwargs,
+            self.client.put('/delegates/%s' % delegate_id, data=kwargs,
                             headers=headers)
 
-    def delete(self, target_id):
-        """Delete a target."""
-        self._delete("/targets/%s" % target_id)
+    def delete(self, delegate_id):
+        """Delete a delegate."""
+        self._delete("/delegates/%s" % delegate_id)
 
     def get(self, stack_id, resolve_outputs=True):
-        """Get the metadata for a specific target.
+        """Get the metadata for a specific delegate.
 
         :param stack_id: Stack ID to lookup
         :param resolve_outputs: If True, then outputs for this
@@ -80,6 +80,6 @@ class TargetsManager(base.BaseManager):
         kwargs = {}
         if not resolve_outputs:
             kwargs['params'] = {"resolve_outputs": False}
-        resp = self.client.get('/targets/%s' % stack_id, **kwargs)
+        resp = self.client.get('/delegates/%s' % stack_id, **kwargs)
         body = utils.get_response_body(resp)
-        return Target(self, body.get('target'))
+        return Delegate(self, body.get('delegate'))
