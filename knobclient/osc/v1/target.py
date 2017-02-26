@@ -134,7 +134,7 @@ class ListTarget(command.Lister):
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
 
-        knob_client = self.app.client_manager.search
+        knob_client = self.app.client_manager.knob
         columns = (
             "Resource Type",
             "Type",
