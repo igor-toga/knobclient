@@ -16,7 +16,7 @@ from knobclient.common import base
 from knobclient.common import utils
 
 
-class Associate(base.Resource):
+class Associate(object):
     def __repr__(self):
         return "<Associate %s>" % self._info
 
@@ -28,16 +28,6 @@ class Associate(base.Resource):
 
     def delete(self):
         return self.manager.delete(self.identifier)
-
-    def get(self):
-        # set_loaded() first ... so if we have to bail, we know we tried.
-        self._loaded = True
-        if not hasattr(self.manager, 'get'):
-            return
-
-        new = self.manager.get(self.identifier)
-        if new:
-            self._add_details(new._info)
 
 class AssociatesManager(base.BaseManager):
     resource_class = Associate
@@ -67,7 +57,7 @@ class AssociatesManager(base.BaseManager):
         """Delete an associate."""
         self._delete("/associates/%s" % associate_id)
 
-    def get(self, stack_id, resolve_outputs=True):
+    def get(self, asscoiate_id, resolve_outputs=True):
         """Get the metadata for a specific associate.
 
         :param stack_id: Stack ID to lookup
@@ -77,6 +67,6 @@ class AssociatesManager(base.BaseManager):
         kwargs = {}
         if not resolve_outputs:
             kwargs['params'] = {"resolve_outputs": False}
-        resp = self.client.get('/associates/%s' % stack_id, **kwargs)
+        resp = self.client.get('/associates/%s' % asscoiate_id, **kwargs)
         body = utils.get_response_body(resp)
         return Associate(self, body.get('associate'))

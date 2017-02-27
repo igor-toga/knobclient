@@ -15,7 +15,7 @@ from six.moves.urllib import parse
 from knobclient.common import base
 
 
-class Service(base.Resource):
+class Service(object):
     def __repr__(self):
         return "<Service %s>" % self._info
 

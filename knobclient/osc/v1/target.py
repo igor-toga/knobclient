@@ -18,6 +18,7 @@ import logging
 from osc_lib.command import command
 from osc_lib import utils
 
+from knobclient.i18n import _ 
 from knobclient import exc as exceptions
 
 
@@ -29,13 +30,13 @@ class CreateTarget(command.ShowOne):
     def get_parser(self, prog_name):
         parser = super(CreateTarget, self).get_parser(prog_name)
         parser.add_argument(
-            'service-name',
-            metavar='<service>',
-            help=_('Name of service to connect target to')
+            'gate_id',
+            metavar='<gate_id>',
+            help=_('Name of gate to connect target to')
         )
         parser.add_argument(
-            'hostname',
-            metavar='<hostname>',
+            'targetname',
+            metavar='<target-name>',
             help=_('Host name to use as target endpoint')
         )
         parser.add_argument(
@@ -61,9 +62,12 @@ class CreateTarget(command.ShowOne):
         knob_client = self.app.client_manager.knob
 
         try:
-            data = knob_client.targets.create(parsed_args.service,
-                                              parsed_args.hostname)
-        except exceptions.HTTPNotFound:
+            params = {
+                "gate_id": parsed_args.gate_id,
+                "targetname": parsed_args.targetname
+            }
+            data = knob_client.targets.create(**params)
+        except exceptions.HTTPServerError:
             raise exceptions.CommandError(_('Target not found: %s')
                                    % parsed_args.stack)
 
@@ -86,13 +90,13 @@ class DeleteTarget(command.Command):
     def get_parser(self, prog_name):
         parser = super(DeleteTarget, self).get_parser(prog_name)
         parser.add_argument(
-            'service-name',
-            metavar='<service>',
+            'gate_id',
+            metavar='<gate_id>',
             help=_('Service to disconnect this target from')
         )
         parser.add_argument(
-            'hostname',
-            metavar='<hostname>',
+            'targetname',
+            metavar='<targetname>',
             help=_('Hostname endponit to disconnect from service')
         )
         return parser
@@ -103,11 +107,11 @@ class DeleteTarget(command.Command):
         try:
             knob_client.targets.delete(parsed_args.service,
                                                parsed_args.hostname)
-        except exceptions.HTTPNotFound:
+        except exceptions.HTTPServerError:
             raise exceptions.CommandError(_('Hostname <%(hostname)s> not found '
                                      'for service <%(service)s>')
-                                   % {'hostname': parsed_args.hostname,
-                                      'service': parsed_args.service})
+                                   % {'hostname': parsed_args.targetname,
+                                      'service': parsed_args.gate_id})
 
 
 
@@ -119,11 +123,6 @@ class ListTarget(command.Lister):
     def get_parser(self, prog_name):
         parser = super(ListTarget, self).get_parser(prog_name)
         parser.add_argument(
-            "--type",
-            metavar="<resource-type>",
-            help="Get targets for a particular resource type"
-        )
-        parser.add_argument(
             "--all-projects",
             action='store_true',
             default=False,
@@ -134,31 +133,13 @@ class ListTarget(command.Lister):
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
 
-        knob_client = self.app.client_manager.knob
-        columns = (
-            "Resource Type",
-            "Type",
-            "Name",
-            "Options"
-        )
         params = {
-            "type": parsed_args.type,
             "all_projects": parsed_args.all_projects
         }
-        data = knob_client.targets.list(**params)
-        result = []
-        for resource_type, values in data.items():
-            if isinstance(values, list):
-                # Cope with pre-1.0 service APIs
-                targets = values
-            else:
-                targets = values['targets']
-            for s in targets:
-                options = []
-                for o in s.get('options', []):
-                    options.append(
-                        str(o['key']) + '(' + str(o['doc_count']) + ')')
-                s["options"] = ', '.join(options)
-                s["resource_type"] = resource_type
-                result.append(utils.get_dict_properties(s, columns))
-        return (columns, result)
+        obj_list = self.app.client_manager.knob.targets.list(**params)
+                
+        if not obj_list:
+            return [], []
+        columns = obj_list[0]._get_generic_columns()
+        data = (obj._get_generic_data() for obj in obj_list)
+        return columns, data

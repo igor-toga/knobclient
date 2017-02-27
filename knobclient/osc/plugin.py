@@ -11,9 +11,7 @@
 #   under the License.
 #
 
-"""OpenStackClient plugin for Search service."""
-
-import logging
+"""OpenStackClient plugin for Knob service."""
 
 from osc_lib import utils
 
@@ -21,25 +19,21 @@ DEFAULT_KNOB_API_VERSION = '1'
 API_VERSION_OPTION = 'os_knob_api_version'
 API_NAME = 'knob'
 API_VERSIONS = {
-    '1': 'knobclient.v1.client.Client',
+    '1': 'knobclient.client.Client',
 }
 
 
 def make_client(instance):
-    """Returns a search service client"""
+    """Returns a knob service client"""
     knob_client = utils.get_client_class(
         API_NAME,
         instance._api_version[API_NAME],
         API_VERSIONS)
 
-    # Set client http_log_debug to True if verbosity level is high enough
-    http_log_debug = utils.get_effective_log_level() <= logging.DEBUG
-
     # Remember interface only if it is set
     kwargs = utils.build_kwargs_dict('endpoint_type', instance._interface)
     client = knob_client(
         session=instance.session,
-        http_log_debug=http_log_debug,
         region_name=instance._region_name,
         **kwargs
     )

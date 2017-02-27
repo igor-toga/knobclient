@@ -21,13 +21,13 @@ from osc_lib import utils
 from knobclient import exc as exceptions
 
 
-class CreateDelegate(command.ShowOne):
+class CreateGate(command.ShowOne):
     """Create a SSH delegate."""
 
-    log = logging.getLogger(__name__ + '.CreateDelegate')
+    log = logging.getLogger(__name__ + '.CreateGate')
 
     def get_parser(self, prog_name):
-        parser = super(CreateDelegate, self).get_parser(prog_name)
+        parser = super(CreateGate, self).get_parser(prog_name)
         parser.add_argument(
             'service-name',
             metavar='<service>',
@@ -64,7 +64,7 @@ class CreateDelegate(command.ShowOne):
             data = knob_client.delegates.create(parsed_args.service,
                                               parsed_args.hostname)
         except exceptions.HTTPNotFound:
-            raise exceptions.CommandError(_('Delegate not found: %s')
+            raise exceptions.CommandError(_('Gate not found: %s')
                                    % parsed_args.stack)
 
         columns = [
@@ -79,12 +79,12 @@ class CreateDelegate(command.ShowOne):
 
 
 
-class DeleteDelegate(command.Command):
+class DeleteGate(command.Command):
     """Delete delegate endpoint from service."""
-    log = logging.getLogger(__name__ + ".DeleteDelegate")
+    log = logging.getLogger(__name__ + ".DeleteGate")
 
     def get_parser(self, prog_name):
-        parser = super(DeleteDelegate, self).get_parser(prog_name)
+        parser = super(DeleteGate, self).get_parser(prog_name)
         parser.add_argument(
             'service-name',
             metavar='<service>',
@@ -111,13 +111,13 @@ class DeleteDelegate(command.Command):
 
 
 
-class ListDelegate(command.Lister):
+class ListGate(command.Lister):
     """List Knob delegates."""
 
-    log = logging.getLogger(__name__ + ".ListDelegate")
+    log = logging.getLogger(__name__ + ".ListGate")
 
     def get_parser(self, prog_name):
-        parser = super(ListDelegate, self).get_parser(prog_name)
+        parser = super(ListGate, self).get_parser(prog_name)
         parser.add_argument(
             "--type",
             metavar="<resource-type>",
