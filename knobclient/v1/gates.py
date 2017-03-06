@@ -9,6 +9,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from six.moves.urllib import parse
+
 from knobclient.common import base
 from knobclient.common import utils
 
@@ -32,6 +34,8 @@ class GatesManager(base.BaseManager):
 
     def list(self, **kwargs):
         """Get a list of gates."""
+        url = '/gates?%s' % parse.urlencode(kwargs)
+        return self._list(url, "gates")
 
     def create(self, **kwargs):
         """Create a gate."""

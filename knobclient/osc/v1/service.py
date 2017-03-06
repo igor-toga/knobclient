@@ -20,17 +20,12 @@ from osc_lib import utils
 
 
 class ListService(command.Lister):
-    """List Services."""
+    """List Knob services."""
 
     log = logging.getLogger(__name__ + ".ListService")
 
     def get_parser(self, prog_name):
         parser = super(ListService, self).get_parser(prog_name)
-        parser.add_argument(
-            "--type",
-            metavar="<resource-type>",
-            help="Get facets for a particular resource type"
-        )
         parser.add_argument(
             "--all-projects",
             action='store_true',
@@ -42,31 +37,13 @@ class ListService(command.Lister):
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
 
-        knob_client = self.app.client_manager.knob
-        columns = (
-            "Resource Type",
-            "Type",
-            "Name",
-            "Options"
-        )
         params = {
-            "type": parsed_args.type,
             "all_projects": parsed_args.all_projects
         }
-        data = knob_client.services.list(**params)
-        result = []
-        for resource_type, values in data.items():
-            if isinstance(values, list):
-                # Cope with pre-1.0 service APIs
-                services = values
-            else:
-                services = values['services']
-            for s in services:
-                options = []
-                for o in s.get('options', []):
-                    options.append(
-                        str(o['key']) + '(' + str(o['doc_count']) + ')')
-                s["options"] = ', '.join(options)
-                s["resource_type"] = resource_type
-                result.append(utils.get_dict_properties(s, columns))
-        return (columns, result)
+        obj_list = self.app.client_manager.knob.services.list(**params)
+                
+        if not obj_list:
+            return [], []
+        columns = obj_list[0]._get_generic_columns()
+        data = (obj._get_generic_data() for obj in obj_list)
+        return columns, data

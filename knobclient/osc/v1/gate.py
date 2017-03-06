@@ -11,7 +11,7 @@
 #   under the License.
 #
 
-"""Knob v1 Facet delegate implementations"""
+"""Knob v1 Facet gate implementations"""
 
 import logging
 
@@ -22,7 +22,7 @@ from knobclient import exc as exceptions
 
 
 class CreateGate(command.ShowOne):
-    """Create a SSH delegate."""
+    """Create a SSH gate."""
 
     log = logging.getLogger(__name__ + '.CreateGate')
 
@@ -31,17 +31,17 @@ class CreateGate(command.ShowOne):
         parser.add_argument(
             'service-name',
             metavar='<service>',
-            help=_('Name of service to connect delegate to')
+            help=_('Name of service to connect gate to')
         )
         parser.add_argument(
             'hostname',
             metavar='<hostname>',
-            help=_('Host name to use as delegate endpoint')
+            help=_('Host name to use as gate endpoint')
         )
         parser.add_argument(
             '--public-key',
             metavar='<key_id>',
-            help=_('Public key required to connect to delegate host')
+            help=_('Public key required to connect to gate host')
         )
         parser.add_argument(
             '--public-key-file',
@@ -51,7 +51,7 @@ class CreateGate(command.ShowOne):
         parser.add_argument(
             '--generate',
             metavar='<None>',
-            help=_('Generate key pair to access delegate endpoint')
+            help=_('Generate key pair to access gate endpoint')
         )
         
         return parser
@@ -61,7 +61,7 @@ class CreateGate(command.ShowOne):
         knob_client = self.app.client_manager.knob
 
         try:
-            data = knob_client.delegates.create(parsed_args.service,
+            data = knob_client.gates.create(parsed_args.service,
                                               parsed_args.hostname)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Gate not found: %s')
@@ -80,7 +80,7 @@ class CreateGate(command.ShowOne):
 
 
 class DeleteGate(command.Command):
-    """Delete delegate endpoint from service."""
+    """Delete gate endpoint from service."""
     log = logging.getLogger(__name__ + ".DeleteGate")
 
     def get_parser(self, prog_name):
@@ -88,7 +88,7 @@ class DeleteGate(command.Command):
         parser.add_argument(
             'service-name',
             metavar='<service>',
-            help=_('Service to disconnect this delegate from')
+            help=_('Service to disconnect this gate from')
         )
         parser.add_argument(
             'hostname',
@@ -101,7 +101,7 @@ class DeleteGate(command.Command):
         self.log.debug('take_action(%s)', parsed_args)
         knob_client = self.app.client_manager.knob
         try:
-            knob_client.delegates.delete(parsed_args.service,
+            knob_client.gates.delete(parsed_args.service,
                                                parsed_args.hostname)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Hostname <%(hostname)s> not found '
@@ -112,17 +112,12 @@ class DeleteGate(command.Command):
 
 
 class ListGate(command.Lister):
-    """List Knob delegates."""
+    """List Knob gates."""
 
     log = logging.getLogger(__name__ + ".ListGate")
 
     def get_parser(self, prog_name):
         parser = super(ListGate, self).get_parser(prog_name)
-        parser.add_argument(
-            "--type",
-            metavar="<resource-type>",
-            help="Get delegates for a particular resource type"
-        )
         parser.add_argument(
             "--all-projects",
             action='store_true',
@@ -134,31 +129,13 @@ class ListGate(command.Lister):
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
 
-        knob_client = self.app.client_manager.knob
-        columns = (
-            "Resource Type",
-            "Type",
-            "Name",
-            "Options"
-        )
         params = {
-            "type": parsed_args.type,
             "all_projects": parsed_args.all_projects
         }
-        data = knob_client.delegates.list(**params)
-        result = []
-        for resource_type, values in data.items():
-            if isinstance(values, list):
-                # Cope with pre-1.0 service APIs
-                delegates = values
-            else:
-                delegates = values['delegates']
-            for s in delegates:
-                options = []
-                for o in s.get('options', []):
-                    options.append(
-                        str(o['key']) + '(' + str(o['doc_count']) + ')')
-                s["options"] = ', '.join(options)
-                s["resource_type"] = resource_type
-                result.append(utils.get_dict_properties(s, columns))
-        return (columns, result)
+        obj_list = self.app.client_manager.knob.gates.list(**params)
+                
+        if not obj_list:
+            return [], []
+        columns = obj_list[0]._get_generic_columns()
+        data = (obj._get_generic_data() for obj in obj_list)
+        return columns, data

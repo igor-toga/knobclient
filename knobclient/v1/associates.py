@@ -34,6 +34,8 @@ class AssociatesManager(base.BaseManager):
 
     def list(self, **kwargs):
         """Get a list of associates."""
+        url = '/associates?%s' % parse.urlencode(kwargs)
+        return self._list(url, "associates")
 
     def create(self, **kwargs):
         """Create an associate."""

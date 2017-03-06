@@ -21,7 +21,7 @@ from keystoneauth1 import session as ks_session
 
 from knobclient.v1 import associates
 from knobclient.v1 import targets
-from knobclient.v1 import delegates
+from knobclient.v1 import gates
 from knobclient import exc as exceptions
 
 
@@ -170,6 +170,6 @@ class Client(object):
         httpclient = _HTTPClient(session=session, *args, **kwargs)
 
         self.associates = associates.AssociatesManager(httpclient)
-        self.delegates = delegates.DelegatesManager(httpclient)
+        self.gates = gates.GatesManager(httpclient)
         self.targets = targets.TargetsManager(httpclient)
         

@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from oslo_serialization import jsonutils
+
+verbose = 0
 
     
 class KnobException(Exception):
@@ -57,3 +60,43 @@ class HTTPAuthError(HTTPError):
     """Raised for 401 Unauthorized responses from the server."""
     def __init__(self, message, status_code=401):
         super(HTTPError, self).__init__(message, status_code)
+
+
+class HTTPException(KnobException):
+    """Base exception for all HTTP-derived exceptions."""
+    code = 'N/A'
+
+    def __init__(self, message=None, code=None):
+        super(HTTPException, self).__init__(message)
+        try:
+            self.error = jsonutils.loads(message)
+            if 'error' not in self.error:
+                raise KeyError(_('Key "error" not exists'))
+        except KeyError:
+            # NOTE(jianingy): If key 'error' happens not exist,
+            # self.message becomes no sense. In this case, we
+            # return doc of current exception class instead.
+            self.error = {'error':
+                          {'message': self.__class__.__doc__}}
+        except Exception:
+            self.error = {'error':
+                          {'message': self.message or self.__class__.__doc__}}
+        if self.code == "N/A" and code is not None:
+            self.code = code
+
+    def __str__(self):
+        message = self.error['error'].get('message', 'Internal Error')
+        if verbose:
+            traceback = self.error['error'].get('traceback', '')
+            return (_('ERROR: %(message)s\n%(traceback)s') %
+                    {'message': message, 'traceback': traceback})
+        else:
+            return _('ERROR: %s') % message
+
+class NotFound(HTTPException):
+    """DEPRECATED."""
+    code = 404
+
+
+class HTTPNotFound(NotFound):
+    pass
