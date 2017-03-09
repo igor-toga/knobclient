@@ -129,9 +129,10 @@ class ListGate(command.Lister):
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
 
-        params = {
-            "all_projects": parsed_args.all_projects
-        }
+        #params = {
+        #    "all_projects": parsed_args.all_projects
+        #}
+        params = {}
         obj_list = self.app.client_manager.knob.gates.list(**params)
                 
         if not obj_list:
