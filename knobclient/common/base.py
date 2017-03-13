@@ -75,18 +75,15 @@ class BaseManager(object):
         else:
             body = self.client.get(url).json()
 
-        if obj_class is None:
-            obj_class = self.resource_class
 
         data = body[response_key] if response_key is not None else body
         # NOTE(ja): keystone returns values as list as {'values': [ ... ]}
         #           unlike other services which just return the list...
-        try:
-            data = data['values']
-        except (KeyError, TypeError):
-            pass
-
-        return [obj_class(self, res, loaded=True) for res in data if res]
+        #try:
+        #    data = data['values']
+        #except (KeyError, TypeError):
+        #    pass
+        return data
 
     def _get(self, url, response_key=None):
         """Get an object from collection.

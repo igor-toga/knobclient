@@ -128,15 +128,14 @@ class ListGate(command.Lister):
 
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
-
+        columns = ['tenant_id', 'name', 'project_id','status']
         #params = {
         #    "all_projects": parsed_args.all_projects
         #}
         params = {}
-        obj_list = self.app.client_manager.knob.gates.list(**params)
-                
-        if not obj_list:
-            return [], []
-        columns = obj_list[0]._get_generic_columns()
-        data = (obj._get_generic_data() for obj in obj_list)
-        return columns, data
+        gates = self.app.client_manager.knob.gates.list(**params)
+        
+        return (
+            columns,
+            (utils.get_dict_properties(s, columns) for s in gates)
+        )

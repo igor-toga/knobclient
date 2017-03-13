@@ -65,7 +65,8 @@ class _HTTPClient(adapter.Adapter):
         headers = kwargs.setdefault('headers', {})
         headers.setdefault('Accept', 'application/json')
 
-        return super(_HTTPClient, self).get(*args, **kwargs).json()
+        #return super(_HTTPClient, self).get(*args, **kwargs).json()
+        return super(_HTTPClient, self).get(*args, **kwargs)
 
     def post(self, path, *args, **kwargs):
         path = self._fix_path(path)
