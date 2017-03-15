@@ -15,6 +15,14 @@ from six.moves.urllib import parse
 
 class ServiceManager(object):
 
+    def __init__(self, client):
+        """Initializes GatesManager with `client`.
+
+        :param client: instance of BaseClient descendant for HTTP requests
+        """
+        super(ServiceManager, self).__init__()
+        self.client = client
+        
     def list(self, **kwargs):
         """Get a list of gates."""
         params = {}
@@ -24,7 +32,7 @@ class ServiceManager(object):
             params['type'] = kwargs['type']
         if kwargs.get('all_projects') is not None:
             params['all_projects'] = kwargs['all_projects']
-        url = '/services?%s' % parse.urlencode(params, True)
-        body = self.client.get(url).json()
+        url = '/ssh_services?%s' % parse.urlencode(params, True)
+        body = self.client.get(url)
         return body
 

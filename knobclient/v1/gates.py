@@ -51,4 +51,4 @@ class GatesManager(object):
 
     def delete(self, gate_id):
         """Delete a gate."""
-        self._delete("/gates/%s" % gate_id)
+        self.client.delete("/gates/%s" % gate_id)

@@ -12,16 +12,16 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
 import logging
-import os
 
 from keystoneauth1 import adapter
 from keystoneauth1 import session as ks_session
+from oslo_serialization import jsonutils
 
 from knobclient.v1 import associates
 from knobclient.v1 import targets
 from knobclient.v1 import gates
+from knobclient.v1 import services
 from knobclient import exc as exceptions
 
 
@@ -56,22 +56,35 @@ class _HTTPClient(adapter.Adapter):
 
         # Set raise_exc=False by default so that we handle request exceptions
         kwargs.setdefault('raise_exc', False)
-
+        
         resp = super(_HTTPClient, self).request(*args, **kwargs)
         self._check_status_code(resp)
         return resp
 
     def get(self, *args, **kwargs):
         headers = kwargs.setdefault('headers', {})
+        headers.setdefault('Content-Type', 'application/json')
         headers.setdefault('Accept', 'application/json')
 
         return super(_HTTPClient, self).get(*args, **kwargs).json()
 
-    def post(self, path, *args, **kwargs):
-        path = self._fix_path(path)
+    def post(self, *args, **kwargs):
+        #path = self._fix_path(path)
+        headers = kwargs.setdefault('headers', {})
+        headers.setdefault('Content-Type', 'application/json')
+        headers.setdefault('Accept', 'application/json')
 
-        return super(_HTTPClient, self).post(path, *args, **kwargs).json()
+        if 'data' in kwargs:
+            kwargs['data'] = jsonutils.dumps(kwargs['data'])
 
+        return super(_HTTPClient, self).post(*args, **kwargs).json()
+
+    def delete(self, *args, **kwargs):
+        headers = kwargs.setdefault('headers', {})
+        headers.setdefault('Content-Type', 'application/octet-stream')
+        
+        return super(_HTTPClient, self).delete(*args, **kwargs).json()
+        
     def _fix_path(self, path):
         if not path[-1] == '/':
             path += '/'
@@ -172,4 +185,5 @@ class Client(object):
         self.associates = associates.AssociatesManager(httpclient)
         self.gates = gates.GatesManager(httpclient)
         self.targets = targets.TargetsManager(httpclient)
+        self.services = services.ServiceManager(httpclient)
         
