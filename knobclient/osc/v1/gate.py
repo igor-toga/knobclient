@@ -122,10 +122,10 @@ class ListGate(command.Lister):
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
         columns = ['tenant_id', 'name', 'project_id','status']
-        #params = {
-        #    "all_projects": parsed_args.all_projects
-        #}
-        params = {}
+        params = {
+            "all_projects": parsed_args.all_projects
+        }
+        #params = {}
         gates = self.app.client_manager.knob.gates.list(**params)
         
         return (

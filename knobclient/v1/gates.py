@@ -25,33 +25,30 @@ class GatesManager(object):
         self.client = client
         
     def list(self, **kwargs):
-        """Get a list of gates."""
+        """Get a list of gates.
+
+        """
         url = '/gates?%s' % parse.urlencode(kwargs)
         body = self.client.get(url)
         return body['gates']
 
+    def get(self, gate_id):
+        """Get the details for a specific gate.
+
+        :param gate_id: ID of the gate
+        """
+        resp = self.client.get('/gates/%s' % gate_id)
+        body = utils.get_response_body(resp)
+
+        return body
+
     def create(self, **kwargs):
         """Create a gate."""
-        print (kwargs)
         resp = self.client.post('/gates', data=kwargs)
-        print ('returned ----------__>')
         body = utils.get_response_body(resp)
         return body
-    
+
+
     def delete(self, gate_id):
         """Delete a gate."""
-        self.client.delete("/gates/%s" % gate_id)
-
-    def get(self, gate_id, resolve_outputs=True):
-        """Get the metadata for a specific gate.
-
-        :param stack_id: Stack ID to lookup
-        :param resolve_outputs: If True, then outputs for this
-               stack will be resolved
-        """
-        kwargs = {}
-        if not resolve_outputs:
-            kwargs['params'] = {"resolve_outputs": False}
-        body = self.client.get('/gates/%s' % gate_id, **kwargs)
-        return body
-        
+        self._delete("/gates/%s" % gate_id)
