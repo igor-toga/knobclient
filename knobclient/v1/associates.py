@@ -12,54 +12,37 @@
 
 from six.moves.urllib import parse
 
-from knobclient.common import base
 from knobclient.common import utils
 
 
-class Associate(object):
-    def __repr__(self):
-        return "<Associate %s>" % self._info
+class AssociatesManager(object):
 
-    def create(self, **fields):
-        return self.manager.create(self.identifier, **fields)
+    def __init__(self, client):
+        """Initializes GatesManager with `client`.
 
-    def update(self, **fields):
-        self.manager.update(self.identifier, **fields)
-
-    def delete(self):
-        return self.manager.delete(self.identifier)
-
-class AssociatesManager(base.BaseManager):
-    resource_class = Associate
+        :param client: instance of BaseClient descendant for HTTP requests
+        """
+        super(AssociatesManager, self).__init__()
+        self.client = client
 
     def list(self, **kwargs):
         """Get a list of associates."""
         url = '/associates?%s' % parse.urlencode(kwargs)
-        return self._list(url, "associates")
-
-    def create(self, **kwargs):
-        """Create an associate."""
-        headers = self.client.credentials_headers()
-        resp = self.client.post('/associates',
-                                data=kwargs, headers=headers)
-        body = utils.get_response_body(resp)
+        body = self.client.get(url)
         return body
 
-    def update(self, associate_id, **kwargs):
-        """Update an associate."""
-        headers = self.client.credentials_headers()
-        if kwargs.pop('existing', None):
-            self.client.patch('/associates/%s' % associate_id, data=kwargs,
-                              headers=headers)
-        else:
-            self.client.put('/associates/%s' % associate_id, data=kwargs,
-                            headers=headers)
-
+    def create(self, **kwargs):
+        """Create a associate."""
+        print (kwargs)
+        resp = self.client.post('/associates', data=kwargs)
+        body = utils.get_response_body(resp)
+        return body
+    
     def delete(self, associate_id):
-        """Delete an associate."""
-        self._delete("/associates/%s" % associate_id)
+        """Delete a associate."""
+        self.client.delete("/associates/%s" % associate_id)
 
-    def get(self, asscoiate_id, resolve_outputs=True):
+    def get(self, associate_id, resolve_outputs=True):
         """Get the metadata for a specific associate.
 
         :param stack_id: Stack ID to lookup
@@ -69,6 +52,6 @@ class AssociatesManager(base.BaseManager):
         kwargs = {}
         if not resolve_outputs:
             kwargs['params'] = {"resolve_outputs": False}
-        resp = self.client.get('/associates/%s' % asscoiate_id, **kwargs)
-        body = utils.get_response_body(resp)
-        return Associate(self, body.get('associate'))
+        body = self.client.get('/associates/%s' % associate_id, **kwargs)
+        return body
+        

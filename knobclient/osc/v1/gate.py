@@ -18,6 +18,7 @@ import logging
 from osc_lib.command import command
 from osc_lib import utils
 
+from knobclient.i18n import _
 from knobclient import exc as exceptions
 
 
@@ -29,30 +30,17 @@ class CreateGate(command.ShowOne):
     def get_parser(self, prog_name):
         parser = super(CreateGate, self).get_parser(prog_name)
         parser.add_argument(
-            'service-name',
-            metavar='<service>',
-            help=_('Name of service to connect gate to')
-        )
-        parser.add_argument(
-            'hostname',
-            metavar='<hostname>',
-            help=_('Host name to use as gate endpoint')
+            'gate',
+            metavar='<gate>',
+            help=_('Name of gate to create')
         )
         parser.add_argument(
             '--public-key',
-            metavar='<key_id>',
+            metavar='<public-key>',
+            #action='store_true',
             help=_('Public key required to connect to gate host')
         )
-        parser.add_argument(
-            '--public-key-file',
-            metavar='<key-file>',
-            help=_('Name of public key file to load')
-        )
-        parser.add_argument(
-            '--generate',
-            metavar='<None>',
-            help=_('Generate key pair to access gate endpoint')
-        )
+        
         
         return parser
 
@@ -60,13 +48,24 @@ class CreateGate(command.ShowOne):
         self.log.debug('take_action(%s)', parsed_args)
         knob_client = self.app.client_manager.knob
 
+        fields = {
+            'name': parsed_args.gate
+            }
+        if parsed_args.public_key:
+            fields['public_key'] = parsed_args.public_key
+            
         try:
-            data = knob_client.gates.create(parsed_args.service,
-                                              parsed_args.hostname)
+            data = knob_client.gates.create(**fields)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Gate not found: %s')
-                                   % parsed_args.stack)
-
+                                   % parsed_args.gate)
+        """
+        if parsed_args.wait:
+            stack_status, msg = event_utils.poll_for_events(
+                client, parsed_args.name, action='CREATE')
+            if stack_status == 'CREATE_FAILED':
+                raise exc.CommandError(msg)
+        """
         columns = [
             'ID',
             'name',
@@ -86,14 +85,9 @@ class DeleteGate(command.Command):
     def get_parser(self, prog_name):
         parser = super(DeleteGate, self).get_parser(prog_name)
         parser.add_argument(
-            'service-name',
-            metavar='<service>',
-            help=_('Service to disconnect this gate from')
-        )
-        parser.add_argument(
-            'hostname',
-            metavar='<hostname>',
-            help=_('Hostname endponit to disconnect from service')
+            'gate',
+            metavar='<gate>',
+            help=_('gate to delete')
         )
         return parser
 
@@ -101,8 +95,7 @@ class DeleteGate(command.Command):
         self.log.debug('take_action(%s)', parsed_args)
         knob_client = self.app.client_manager.knob
         try:
-            knob_client.gates.delete(parsed_args.service,
-                                               parsed_args.hostname)
+            knob_client.gates.delete(parsed_args.gate)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Hostname <%(hostname)s> not found '
                                      'for service <%(service)s>')
@@ -122,7 +115,7 @@ class ListGate(command.Lister):
             "--all-projects",
             action='store_true',
             default=False,
-            help="Request facet terms for all projects (admin only)"
+            help=_("Request facet terms for all projects (admin only)")
         )
         return parser
 
@@ -139,3 +132,30 @@ class ListGate(command.Lister):
             columns,
             (utils.get_dict_properties(s, columns) for s in gates)
         )
+        
+
+class ShowGate(command.ShowOne):
+    """Show Knob details."""
+
+    log = logging.getLogger(__name__ + ".ShowGate")
+
+    def get_parser(self, prog_name):
+        parser = super(ShowGate, self).get_parser(prog_name)
+        parser.add_argument(
+            'gate',
+            metavar='<gate>',
+            help='Gate to display (name or ID)',
+        )
+        
+        return parser
+
+    def take_action(self, parsed_args):
+        self.log.debug("take_action(%s)", parsed_args)
+
+        knob_client = self.app.client_manager.knob
+        try:
+            data = knob_client.gates.get(parsed_args.gate)
+        except exceptions.HTTPNotFound:
+            raise exceptions.CommandError(_('Gate not found: %s')
+                                   % parsed_args.gate)
+        

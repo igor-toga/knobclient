@@ -11,53 +11,37 @@
 #    under the License.
 from six.moves.urllib import parse
 
-from knobclient.common import base
 from knobclient.common import utils
 
+class TargetsManager(object):
 
-class Target(object):
-    def __repr__(self):
-        return "<Target %s>" % self._info
+    def __init__(self, client):
+        """Initializes GatesManager with `client`.
 
-    def create(self, **fields):
-        return self.manager.create(self.identifier, **fields)
-
-    def update(self, **fields):
-        self.manager.update(self.identifier, **fields)
-
-    def delete(self):
-        return self.manager.delete(self.identifier)
-
-
-class TargetsManager(base.BaseManager):
-    resource_class = Target
+        :param client: instance of BaseClient descendant for HTTP requests
+        """
+        super(TargetsManager, self).__init__()
+        self.client = client
 
     def list(self, **kwargs):
         """Get a list of targets."""
-
         url = '/targets?%s' % parse.urlencode(kwargs)
-        return self._list(url, "targets")
+        body = self.client.get(url)
+        return body['targets']
 
     def create(self, **kwargs):
         """Create a target."""
+        print (kwargs)
         resp = self.client.post('/targets', data=kwargs)
         body = utils.get_response_body(resp)
         return body
-
-    def update(self, target_id, **kwargs):
-        """Update a target."""
-        if kwargs.pop('existing', None):
-            self.client.patch('/targets/%s' % target_id, data=kwargs)
-        else:
-            self.client.put('/targets/%s' % target_id, data=kwargs)
-
+    
     def delete(self, target_id):
         """Delete a target."""
-        self._delete("/targets/%s" % target_id)
-
+        self.client.delete("/targets/%s" % target_id)
 
     def get(self, target_id, resolve_outputs=True):
-        """Get the metadata for a specific associate.
+        """Get the metadata for a specific target.
 
         :param stack_id: Stack ID to lookup
         :param resolve_outputs: If True, then outputs for this
@@ -66,6 +50,6 @@ class TargetsManager(base.BaseManager):
         kwargs = {}
         if not resolve_outputs:
             kwargs['params'] = {"resolve_outputs": False}
-        resp = self.client.get('/targets/%s' % target_id, **kwargs)
-        body = utils.get_response_body(resp)
-        return Target(self, body.get('target'))
+        body = self.client.get('/targets/%s' % target_id, **kwargs)
+        return body
+        

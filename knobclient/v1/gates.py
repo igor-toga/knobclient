@@ -11,53 +11,36 @@
 #    under the License.
 from six.moves.urllib import parse
 
-from knobclient.common import base
 from knobclient.common import utils
-
-
-class Gate(object):
-    def __repr__(self):
-        return "<Gate %s>" % self._info
-
-    def create(self, **fields):
-        return self.manager.create(self.identifier, **fields)
-
-    def update(self, **fields):
-        self.manager.update(self.identifier, **fields)
-
-    def delete(self):
-        return self.manager.delete(self.identifier)
             
 
-class GatesManager(base.BaseManager):
-    resource_class = Gate
+class GatesManager(object):
 
+    def __init__(self, client):
+        """Initializes GatesManager with `client`.
+
+        :param client: instance of BaseClient descendant for HTTP requests
+        """
+        super(GatesManager, self).__init__()
+        self.client = client
+        
     def list(self, **kwargs):
         """Get a list of gates."""
         url = '/gates?%s' % parse.urlencode(kwargs)
-        return self._list(url, "gates")
+        body = self.client.get(url)
+        return body['gates']
 
     def create(self, **kwargs):
         """Create a gate."""
-        headers = self.client.credentials_headers()
-        resp = self.client.post('/gates',
-                                data=kwargs, headers=headers)
+        print (kwargs)
+        resp = self.client.post('/gates', data=kwargs)
+        print ('returned ----------__>')
         body = utils.get_response_body(resp)
         return body
-
-    def update(self, gate_id, **kwargs):
-        """Update a gate."""
-        headers = self.client.credentials_headers()
-        if kwargs.pop('existing', None):
-            self.client.patch('/gates/%s' % gate_id, data=kwargs,
-                              headers=headers)
-        else:
-            self.client.put('/gates/%s' % gate_id, data=kwargs,
-                            headers=headers)
-
+    
     def delete(self, gate_id):
         """Delete a gate."""
-        self._delete("/gates/%s" % gate_id)
+        self.client.delete("/gates/%s" % gate_id)
 
     def get(self, gate_id, resolve_outputs=True):
         """Get the metadata for a specific gate.
@@ -69,6 +52,6 @@ class GatesManager(base.BaseManager):
         kwargs = {}
         if not resolve_outputs:
             kwargs['params'] = {"resolve_outputs": False}
-        resp = self.client.get('/gates/%s' % gate_id, **kwargs)
-        body = utils.get_response_body(resp)
-        return Gate(self, body.get('gate'))
+        body = self.client.get('/gates/%s' % gate_id, **kwargs)
+        return body
+        

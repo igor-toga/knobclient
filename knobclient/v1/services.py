@@ -12,34 +12,11 @@
 
 from six.moves.urllib import parse
 
-from knobclient.common import base
 
-
-class Service(object):
-    def __repr__(self):
-        return "<Service %s>" % self._info
+class ServiceManager(object):
 
     def list(self, **kwargs):
-        return self.manager.list(self, **kwargs)
-
-
-class ServiceManager(base.BaseManager):
-    resource_class = Service
-
-    def list(self, **kwargs):
-        """Get a list of facets.
-        :param index: Index name to query.
-        :param all_projects: By default, facet terms are limited to the
-                             currently scoped project. Administrators are
-                             able to request facet terms for all projects
-                             by specify all_projects=True.
-        :param limit_terms: Limit the number of options returned for fields
-                            that support facet terms.
-        :param type: Request facets for a particular type by adding a type
-                     query parameter.
-        :rtype: dict of {resource_type: {'facets': [:class:`Service`],
-                                         'doc_count':, :class:int}}
-        """
+        """Get a list of gates."""
         params = {}
         if kwargs.get('index'):
             params['index'] = kwargs['index']
@@ -48,4 +25,6 @@ class ServiceManager(base.BaseManager):
         if kwargs.get('all_projects') is not None:
             params['all_projects'] = kwargs['all_projects']
         url = '/services?%s' % parse.urlencode(params, True)
-        return self._list(url, "services")
+        body = self.client.get(url).json()
+        return body
+
