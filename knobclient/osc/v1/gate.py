@@ -34,13 +34,25 @@ class CreateGate(command.ShowOne):
             metavar='<gate>',
             help=_('Name of gate to create')
         )
+        
         parser.add_argument(
-            '--public-key',
-            metavar='<public-key>',
+            '--net-id',
+            metavar='<net-id>',
+            help=_('Network to build gate server on it')
+        )
+        
+        parser.add_argument(
+            '--public-net-id',
+            metavar='<public-net-id>',
+            help=_('Network to build gate server on it')
+        )
+        
+        parser.add_argument(
+            '--key',
+            metavar='<key>',
             #action='store_true',
             help=_('Public key required to connect to gate host')
         )
-        
         
         return parser
 
@@ -49,10 +61,14 @@ class CreateGate(command.ShowOne):
         knob_client = self.app.client_manager.knob
 
         fields = {
-            'name': parsed_args.gate
+            'name': parsed_args.gate,
+            'net_id': parsed_args.net_id,
+            'public_net_id': parsed_args.public_net_id
             }
-        if parsed_args.public_key:
-            fields['public_key'] = parsed_args.public_key
+        if parsed_args.key:
+            fields['key'] = parsed_args.key
+            
+        
             
         try:
             data = knob_client.gates.create(**fields)
