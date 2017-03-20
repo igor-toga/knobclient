@@ -17,6 +17,7 @@ import logging
 
 from osc_lib.command import command
 from osc_lib import utils
+import six
 
 from knobclient.i18n import _
 from knobclient import exc as exceptions
@@ -71,27 +72,15 @@ class CreateGate(command.ShowOne):
         
             
         try:
-            data = knob_client.gates.create(**fields)
+            gate = knob_client.gates.create(**fields)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Gate not found: %s')
                                    % parsed_args.gate)
-        """
-        if parsed_args.wait:
-            stack_status, msg = event_utils.poll_for_events(
-                client, parsed_args.name, action='CREATE')
-            if stack_status == 'CREATE_FAILED':
-                raise exc.CommandError(msg)
-        """
-        columns = [
-            'ID',
-            'name',
-            'status',
-            'status_reason',
-            'data',
-            'creation_time'
-        ]
-        return (columns, utils.get_dict_properties(data, columns))
-
+                
+        rows = list(six.itervalues(gate))
+        columns = list(six.iterkeys(gate))
+        return columns, rows
+        
 
 
 class DeleteGate(command.Command):
@@ -137,13 +126,12 @@ class ListGate(command.Lister):
 
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
-        columns = ['tenant_id', 'name', 'project_id','status']
         params = {
             "all_projects": parsed_args.all_projects
         }
-        #params = {}
         gates = self.app.client_manager.knob.gates.list(**params)
         
+        columns = ['name', 'server_id', 'fip_id','tenant_id']
         return (
             columns,
             (utils.get_dict_properties(s, columns) for s in gates)
@@ -170,8 +158,15 @@ class ShowGate(command.ShowOne):
 
         knob_client = self.app.client_manager.knob
         try:
-            data = knob_client.gates.get(parsed_args.gate)
+            gate = knob_client.gates.get(parsed_args.gate)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Gate not found: %s')
                                    % parsed_args.gate)
+            
+        rows = list(six.itervalues(gate))
+        columns = list(six.iterkeys(gate))
+        return columns, rows
+            
+
+
         

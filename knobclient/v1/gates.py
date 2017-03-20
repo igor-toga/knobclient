@@ -37,16 +37,13 @@ class GatesManager(object):
 
         :param gate_id: ID of the gate
         """
-        resp = self.client.get('/gates/%s' % gate_id)
-        body = utils.get_response_body(resp)
-
-        return body
+        body = self.client.get('/gates/%s' % gate_id)
+        return body['gates']
 
     def create(self, **kwargs):
         """Create a gate."""
-        resp = self.client.post('/gates', data=kwargs)
-        body = utils.get_response_body(resp)
-        return body
+        body = self.client.post('/gates', data=kwargs)
+        return body['gates']
 
 
     def delete(self, gate_id):
