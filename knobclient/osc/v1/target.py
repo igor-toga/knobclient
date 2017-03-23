@@ -30,29 +30,14 @@ class CreateTarget(command.ShowOne):
     def get_parser(self, prog_name):
         parser = super(CreateTarget, self).get_parser(prog_name)
         parser.add_argument(
-            'gate_id',
-            metavar='<gate_id>',
+            'gate_name',
+            metavar='<gate_name>',
             help=_('Name of gate to connect target to')
         )
         parser.add_argument(
-            'targetname',
-            metavar='<target-name>',
+            'name',
+            metavar='<name>',
             help=_('Host name to use as target endpoint')
-        )
-        parser.add_argument(
-            '--public-key',
-            metavar='<key_id>',
-            help=_('Public key required to connect to target host')
-        )
-        parser.add_argument(
-            '--public-key-file',
-            metavar='<key-file>',
-            help=_('Name of public key file to load')
-        )
-        parser.add_argument(
-            '--generate',
-            metavar='<None>',
-            help=_('Generate key pair to access target endpoint')
         )
         
         return parser
@@ -61,25 +46,20 @@ class CreateTarget(command.ShowOne):
         self.log.debug('take_action(%s)', parsed_args)
         knob_client = self.app.client_manager.knob
 
-        try:
-            params = {
-                "gate_id": parsed_args.gate_id,
-                "targetname": parsed_args.targetname
+        fields = {
+            'name': parsed_args.name,
+            'gate_name': parsed_args.gate_name,
             }
-            data = knob_client.targets.create(**params)
-        except exceptions.HTTPServerError:
+            
+        try:
+            target = knob_client.targets.create(**fields)
+        except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Target not found: %s')
-                                   % parsed_args.stack)
-
-        columns = [
-            'ID',
-            'name',
-            'status',
-            'status_reason',
-            'data',
-            'creation_time'
-        ]
-        return (columns, utils.get_dict_properties(data, columns))
+                                   % parsed_args.name)
+                
+        rows = list(six.itervalues(target))
+        columns = list(six.iterkeys(target))
+        return columns, rows
 
 
 

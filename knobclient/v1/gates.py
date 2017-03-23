@@ -25,19 +25,17 @@ class GatesManager(object):
         self.client = client
         
     def list(self, **kwargs):
-        """Get a list of gates.
-
-        """
+        """Get a list of gates. """
         url = '/gates?%s' % parse.urlencode(kwargs)
         body = self.client.get(url)
         return body['gates']
 
-    def get(self, gate_id):
+    def get(self, gate_name):
         """Get the details for a specific gate.
 
         :param gate_id: ID of the gate
         """
-        body = self.client.get('/gates/%s' % gate_id)
+        body = self.client.get('/gates/%s' % gate_name)
         return body['gates']
 
     def create(self, **kwargs):
@@ -45,7 +43,36 @@ class GatesManager(object):
         body = self.client.post('/gates', data=kwargs)
         return body['gates']
 
-
-    def delete(self, gate_id):
+    def delete(self, gate_name):
         """Delete a gate."""
-        self.client.delete("/gates/%s" % gate_id)
+        self.client.delete("/gates/%s" % gate_name)
+
+    def add_target(self, gate, **kwargs):
+        """Add target VM to list of allowed targets on gate"""
+        body = self.client.post("/gates/%s/targets", data=kwargs)
+        return body['targets']
+        
+    def remove_target(self, gate_name, target):
+        """Delete a target from gate."""
+        self.client.delete("/gates/%s/targets/%s" % (gate_name, target))
+        
+    def list_targets(self, gate, **kwargs):
+        """Get a list of targets on gate. """
+        url = '/gates/%s/targets?%s' % (gate, parse.urlencode(kwargs))
+        body = self.client.get(url)
+        return body['targets']
+    
+    def add_key(self, gate, **kwargs):
+        """Add an authorized key to keys on gate"""
+        body = self.client.post("/gates/%s/keys", data=kwargs)
+        return body['keys']
+        
+    def remove_key(self, gate_name, key):
+        """Delete an authorized key from gate."""
+        self.client.delete("/gates/%s/keys/%s" % (gate_name, key))
+        
+    def list_keys(self, gate, **kwargs):
+        """Get a list of authorized keys on gate. """
+        url = '/gates/%s/keys?%s' % (gate, parse.urlencode(kwargs))
+        body = self.client.get(url)
+        return body['keys']

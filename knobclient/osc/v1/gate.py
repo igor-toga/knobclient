@@ -31,8 +31,8 @@ class CreateGate(command.ShowOne):
     def get_parser(self, prog_name):
         parser = super(CreateGate, self).get_parser(prog_name)
         parser.add_argument(
-            'gate',
-            metavar='<gate>',
+            'name',
+            metavar='<name>',
             help=_('Name of gate to create')
         )
         
@@ -51,7 +51,6 @@ class CreateGate(command.ShowOne):
         parser.add_argument(
             '--key',
             metavar='<key>',
-            #action='store_true',
             help=_('Public key required to connect to gate host')
         )
         
@@ -62,7 +61,7 @@ class CreateGate(command.ShowOne):
         knob_client = self.app.client_manager.knob
 
         fields = {
-            'name': parsed_args.gate,
+            'name': parsed_args.name,
             'net_id': parsed_args.net_id,
             'public_net_id': parsed_args.public_net_id
             }
@@ -75,7 +74,7 @@ class CreateGate(command.ShowOne):
             gate = knob_client.gates.create(**fields)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Gate not found: %s')
-                                   % parsed_args.gate)
+                                   % parsed_args.name)
                 
         rows = list(six.itervalues(gate))
         columns = list(six.iterkeys(gate))
@@ -90,8 +89,8 @@ class DeleteGate(command.Command):
     def get_parser(self, prog_name):
         parser = super(DeleteGate, self).get_parser(prog_name)
         parser.add_argument(
-            'gate',
-            metavar='<gate>',
+            'gate_id',
+            metavar='<gate_id>',
             help=_('gate to delete')
         )
         return parser
@@ -100,12 +99,10 @@ class DeleteGate(command.Command):
         self.log.debug('take_action(%s)', parsed_args)
         knob_client = self.app.client_manager.knob
         try:
-            knob_client.gates.delete(parsed_args.gate)
+            knob_client.gates.delete(parsed_args.gate_id)
         except exceptions.HTTPNotFound:
-            raise exceptions.CommandError(_('Hostname <%(hostname)s> not found '
-                                     'for service <%(service)s>')
-                                   % {'hostname': parsed_args.hostname,
-                                      'service': parsed_args.service})
+            raise exceptions.CommandError(_('Gate not found: %s')
+                                   % parsed_args.gate_id)
 
 
 
@@ -131,7 +128,7 @@ class ListGate(command.Lister):
         }
         gates = self.app.client_manager.knob.gates.list(**params)
         
-        columns = ['name', 'server_id', 'fip_id','tenant_id']
+        columns = ['id', 'name', 'server_id', 'fip_id','tenant_id']
         return (
             columns,
             (utils.get_dict_properties(s, columns) for s in gates)
@@ -146,8 +143,8 @@ class ShowGate(command.ShowOne):
     def get_parser(self, prog_name):
         parser = super(ShowGate, self).get_parser(prog_name)
         parser.add_argument(
-            'gate',
-            metavar='<gate>',
+            'gate_id',
+            metavar='<gate_id>',
             help='Gate to display (name or ID)',
         )
         
@@ -158,15 +155,179 @@ class ShowGate(command.ShowOne):
 
         knob_client = self.app.client_manager.knob
         try:
-            gate = knob_client.gates.get(parsed_args.gate)
+            gate = knob_client.gates.get(parsed_args.gate_id)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Gate not found: %s')
-                                   % parsed_args.gate)
+                                   % parsed_args.gate_id)
             
         rows = list(six.itervalues(gate))
         columns = list(six.iterkeys(gate))
         return columns, rows
             
 
+class GateAddTarget(command.Command):
+    """Add target VM to SSH gate."""
 
+    log = logging.getLogger(__name__ + '.GateAddTarget')
+
+    def get_parser(self, prog_name):
+        parser = super(GateAddTarget, self).get_parser(prog_name)
+        parser.add_argument(
+            'gate_id',
+            metavar='<gate_id>',
+            help=_('ID of gate to create')
+        )
+        parser.add_argument(
+            'server_id',
+            metavar='<server_id>',
+            help=_('nova ID of target to add to gate')
+        )
         
+        parser.add_argument(
+            '--target-name',
+            metavar='<target_name>',
+            help=_('target to add to specified gate')
+        )
+        parser.add_argument(
+            '--routable',
+            action='store_true',
+            default=True,
+            help=_('Refer to state network VM target VM is connected to')
+        )
+        return parser
+
+    def take_action(self, parsed_args):
+        self.log.debug('take_action(%s)', parsed_args)
+        knob_client = self.app.client_manager.knob
+        
+        fields = {
+            'gate_id': parsed_args.gate_id,
+            'server_id': parsed_args.server_id,
+            'target_name': parsed_args.target_name,
+            'routable': parsed_args.routable,
+            }
+        try:
+            target = knob_client.gates.add_target(parsed_args.gate_id, 
+                                                  **fields)
+        except exceptions.HTTPNotFound:
+            raise exceptions.CommandError(_('Gate not found: %s')
+                                   % parsed_args.gate_id)
+                
+        print ('Target VM: %(target)s add to Gate: %(gate)s' % 
+               {'target': parsed_args.server_id, 'gate': parsed_args.gate_id})
+        return target['id']
+
+            
+class GateRemoveTarget(command.Command):
+    """Remove target VM to SSH gate."""
+
+    log = logging.getLogger(__name__ + '.GateRemoveTarget')
+
+    def get_parser(self, prog_name):
+        parser = super(GateRemoveTarget, self).get_parser(prog_name)
+        parser.add_argument(
+            'gate_id',
+            metavar='<gate_id>',
+            help=_('gate to delete')
+        )
+        parser.add_argument(
+            'server_id',
+            metavar='<target>',
+            help=_('target to add to specified gate')
+        )
+        return parser
+
+    def take_action(self, parsed_args):
+        self.log.debug('take_action(%s)', parsed_args)
+        knob_client = self.app.client_manager.knob
+        
+        try:
+            knob_client.gates.remove_target(parsed_args.gate_id,
+                                            parsed_args.target_id)
+        except exceptions.HTTPNotFound:
+            raise exceptions.CommandError(_('Gate not found: %s')
+                                   % parsed_args.gate)
+
+
+
+class GateListTargets(command.Lister):
+    """List targets accessible via gate."""
+
+    log = logging.getLogger(__name__ + ".ListTargets")
+
+    def get_parser(self, prog_name):
+        parser = super(GateListTargets, self).get_parser(prog_name)
+        return parser
+
+    def take_action(self, parsed_args):
+        self.log.debug("take_action(%s)", parsed_args)
+        params = {}
+            
+        targets = self.app.client_manager.knob.gates.list_targets(gate, **params)
+        
+        columns = ['server_id','name', 'gate_id','routable']
+        return (
+            columns,
+            (utils.get_dict_properties(s, columns) for s in targets)
+        )
+
+class GateAddKey(command.Command):
+    """Add public key to SSH gate."""
+
+    log = logging.getLogger(__name__ + '.GateAddKey')
+
+    def get_parser(self, prog_name):
+        pass
+    
+    def take_action(self, parsed_args):
+        pass
+
+    
+class GateRemoveKey(command.Command):
+    """Add public key to SSH gate."""
+
+    log = logging.getLogger(__name__ + '.GateAddKey')
+
+    def get_parser(self, prog_name):
+        pass
+    
+    def take_action(self, parsed_args):
+        pass
+
+
+class GateListKeys(command.Lister):
+    """List all authorized public key at SSH gate."""
+
+    log = logging.getLogger(__name__ + '.GateAddKey')
+
+    def get_parser(self, prog_name):
+        pass
+    
+    def take_action(self, parsed_args):
+        pass
+
+class GateListKeys(command.Lister):
+    """List targets accessible via gate."""
+
+    log = logging.getLogger(__name__ + ".ListTargets")
+
+    def get_parser(self, prog_name):
+        parser = super(GateListKeys, self).get_parser(prog_name)
+        parser.add_argument(
+            "gate",
+            metavar='<gate>',
+            help=_("Request facet terms for all projects (admin only)")
+        )
+        return parser
+
+    def take_action(self, parsed_args):
+        self.log.debug("take_action(%s)", parsed_args)
+        params = {}
+            
+        keys = self.app.client_manager.knob.gates.list_keys(gate,**params)
+        
+        columns = ['name', 'short_content', 'created_at']
+        return (
+            columns,
+            (utils.get_dict_properties(s, columns) for s in keys)
+        )

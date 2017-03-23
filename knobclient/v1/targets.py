@@ -16,7 +16,7 @@ from knobclient.common import utils
 class TargetsManager(object):
 
     def __init__(self, client):
-        """Initializes GatesManager with `client`.
+        """Initializes TargetsManager with `client`.
 
         :param client: instance of BaseClient descendant for HTTP requests
         """
@@ -31,25 +31,18 @@ class TargetsManager(object):
 
     def create(self, **kwargs):
         """Create a target."""
-        print (kwargs)
-        resp = self.client.post('/targets', data=kwargs)
-        body = utils.get_response_body(resp)
-        return body
+        body = self.client.post('/targets', data=kwargs)
+        return body['targets']
     
     def delete(self, target_id):
         """Delete a target."""
         self.client.delete("/targets/%s" % target_id)
 
-    def get(self, target_id, resolve_outputs=True):
-        """Get the metadata for a specific target.
+    def get(self, target_id):
+        """Get the details for a specific target.
 
-        :param stack_id: Stack ID to lookup
-        :param resolve_outputs: If True, then outputs for this
-               stack will be resolved
+        :param target_id: ID of the target
         """
-        kwargs = {}
-        if not resolve_outputs:
-            kwargs['params'] = {"resolve_outputs": False}
-        body = self.client.get('/targets/%s' % target_id, **kwargs)
-        return body
+        body = self.client.get('/targets/%s' % target_id)
+        return body['targets']
         
