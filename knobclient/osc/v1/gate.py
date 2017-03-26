@@ -284,32 +284,21 @@ class GateAddKey(command.Command):
 
     
 class GateRemoveKey(command.Command):
-    """Add public key to SSH gate."""
+    """Remove public key to SSH gate."""
 
-    log = logging.getLogger(__name__ + '.GateAddKey')
-
-    def get_parser(self, prog_name):
-        pass
-    
-    def take_action(self, parsed_args):
-        pass
-
-
-class GateListKeys(command.Lister):
-    """List all authorized public key at SSH gate."""
-
-    log = logging.getLogger(__name__ + '.GateAddKey')
+    log = logging.getLogger(__name__ + '.GateRemoveKey')
 
     def get_parser(self, prog_name):
         pass
     
     def take_action(self, parsed_args):
         pass
+
 
 class GateListKeys(command.Lister):
     """List targets accessible via gate."""
 
-    log = logging.getLogger(__name__ + ".ListTargets")
+    log = logging.getLogger(__name__ + ".ListKeys")
 
     def get_parser(self, prog_name):
         parser = super(GateListKeys, self).get_parser(prog_name)
