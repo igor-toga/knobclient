@@ -52,9 +52,9 @@ class GatesManager(object):
         body = self.client.post("/gates/%s/targets", data=kwargs)
         return body['targets']
         
-    def remove_target(self, gate_name, target):
+    def remove_target(self, gate_id, target):
         """Delete a target from gate."""
-        self.client.delete("/gates/%s/targets/%s" % (gate_name, target))
+        self.client.delete("/gates/%s/targets/%s" % (gate_id, target))
         
     def list_targets(self, gate, **kwargs):
         """Get a list of targets on gate. """
@@ -67,9 +67,9 @@ class GatesManager(object):
         body = self.client.post("/gates/%s/keys", data=kwargs)
         return body['keys']
         
-    def remove_key(self, gate_name, key):
+    def remove_key(self, gate_id, key):
         """Delete an authorized key from gate."""
-        self.client.delete("/gates/%s/keys/%s" % (gate_name, key))
+        self.client.delete("/gates/%s/keys/%s" % (gate_id, key))
         
     def list_keys(self, gate, **kwargs):
         """Get a list of authorized keys on gate. """

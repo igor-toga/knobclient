@@ -277,22 +277,81 @@ class GateAddKey(command.Command):
     log = logging.getLogger(__name__ + '.GateAddKey')
 
     def get_parser(self, prog_name):
-        pass
+        parser = super(GateAddKey, self).get_parser(prog_name)
+        parser.add_argument(
+            '--name',
+            metavar='<name>',
+            help=_('Key name')
+        )
+        parser.add_argument(
+            'gate_id',
+            metavar='<gate_id>',
+            help=_('gate to add public key to it')
+        )
+        parser.add_argument(
+            'key_file',
+            metavar='<key_file>',
+            help=_('public key file path')
+        )
+        return parser
     
     def take_action(self, parsed_args):
-        pass
+        self.log.debug('take_action(%s)', parsed_args)
+        knob_client = self.app.client_manager.knob
+        
+        try:
+            key_content = open(parsed_args.key_file).read().strip()
+        except:
+            print ("FATAL: key file '%s' could not be opened." % parsed_args.key_file)
+            return None
+        
+        fields = {
+            'name': parsed_args.name,
+            'key_content': key_content,
+            }
+        try:
+            key = knob_client.gates.add_key(parsed_args.gate_id, 
+                                                  **fields)
+        except exceptions.HTTPNotFound:
+            raise exceptions.CommandError(_('Key is not added to gate: %s')
+                                   % parsed_args.gate_id)
+                
+        print ('Key: %(key)s add to Gate: %(gate)s' % 
+               {'key': parsed_args.id, 'gate': parsed_args.gate_id})
+        
+        rows = list(six.itervalues(key))
+        columns = list(six.iterkeys(key))
+        return columns, rows
 
     
 class GateRemoveKey(command.Command):
-    """Remove public key to SSH gate."""
+    """Remove public key from SSH gate."""
 
     log = logging.getLogger(__name__ + '.GateRemoveKey')
 
     def get_parser(self, prog_name):
-        pass
-    
+        parser = super(GateRemoveKey, self).get_parser(prog_name)
+        parser.add_argument(
+            'gate_id',
+            metavar='<gate_id>',
+            help=_('gate to delete')
+        )
+        parser.add_argument(
+            'key_id',
+            metavar='<key_id>',
+            help=_('gate to delete')
+        )
+        return parser
+
     def take_action(self, parsed_args):
-        pass
+        self.log.debug('take_action(%s)', parsed_args)
+        knob_client = self.app.client_manager.knob
+        try:
+            knob_client.gates.remove_key(parsed_args.gate_id,
+                                         parsed_args.key_id)
+        except exceptions.HTTPNotFound:
+            raise exceptions.CommandError(_('Key not found: %s')
+                                   % parsed_args.key_id)
 
 
 class GateListKeys(command.Lister):
@@ -315,7 +374,7 @@ class GateListKeys(command.Lister):
             
         keys = self.app.client_manager.knob.gates.list_keys(gate,**params)
         
-        columns = ['name', 'short_content', 'created_at']
+        columns = ['id','name', 'gate_id', 'created_at']
         return (
             columns,
             (utils.get_dict_properties(s, columns) for s in keys)

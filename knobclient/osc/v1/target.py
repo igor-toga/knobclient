@@ -11,7 +11,7 @@
 #   under the License.
 #
 
-"""Knob v1 Facet target implementations"""
+"""Knob v1 target configuration"""
 
 import logging
 
@@ -22,22 +22,38 @@ from knobclient.i18n import _
 from knobclient import exc as exceptions
 
 
-class CreateTarget(command.ShowOne):
-    """Create a SSH target."""
+class GenerateConfig(command.Command):
+    """Create a SSH config."""
 
-    log = logging.getLogger(__name__ + '.CreateTarget')
+    log = logging.getLogger(__name__ + '.GenerateConfig')
 
     def get_parser(self, prog_name):
-        parser = super(CreateTarget, self).get_parser(prog_name)
+        parser = super(GenerateConfig, self).get_parser(prog_name)
         parser.add_argument(
-            'gate_name',
-            metavar='<gate_name>',
-            help=_('Name of gate to connect target to')
+            'gate_id',
+            metavar='<gate_id>',
+            help=_('Gate id to pass trough')
         )
         parser.add_argument(
-            'name',
-            metavar='<name>',
-            help=_('Host name to use as target endpoint')
+            'gate_key_file',
+            metavar='<gate_key_file>',
+            help=_('Gate private key file path')
+        )
+        parser.add_argument(
+            'target_id',
+            metavar='<target_id>',
+            help=_('Target to connect to')
+        )
+        parser.add_argument(
+            'user',
+            metavar='<user>',
+            help=_('Target username')
+        )
+        
+        parser.add_argument(
+            'target_key_file',
+            metavar='<target_key_file>',
+            help=_('target private key file path')
         )
         
         return parser
@@ -47,79 +63,20 @@ class CreateTarget(command.ShowOne):
         knob_client = self.app.client_manager.knob
 
         fields = {
-            'name': parsed_args.name,
-            'gate_name': parsed_args.gate_name,
+            'gate_id': parsed_args.gate_id,
+            'gate_key_file': parsed_args.gate_key_file,
+            'target_id': parsed_args.target_id,
+            'user': parsed_args.user,
+            'target_key_file': parsed_args.target_key_file
             }
             
         try:
-            target = knob_client.targets.create(**fields)
+            target = knob_client.targets.generate_config(**fields)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Target not found: %s')
-                                   % parsed_args.name)
+                                   % parsed_args.target_id)
                 
-        rows = list(six.itervalues(target))
-        columns = list(six.iterkeys(target))
-        return columns, rows
+        return target['config']
 
 
 
-class DeleteTarget(command.Command):
-    """Delete target endpoint from service."""
-    log = logging.getLogger(__name__ + ".DeleteTarget")
-
-    def get_parser(self, prog_name):
-        parser = super(DeleteTarget, self).get_parser(prog_name)
-        parser.add_argument(
-            'gate_id',
-            metavar='<gate_id>',
-            help=_('Service to disconnect this target from')
-        )
-        parser.add_argument(
-            'targetname',
-            metavar='<targetname>',
-            help=_('Hostname endponit to disconnect from service')
-        )
-        return parser
-
-    def take_action(self, parsed_args):
-        self.log.debug('take_action(%s)', parsed_args)
-        knob_client = self.app.client_manager.knob
-        try:
-            knob_client.targets.delete(parsed_args.service,
-                                               parsed_args.hostname)
-        except exceptions.HTTPServerError:
-            raise exceptions.CommandError(_('Hostname <%(hostname)s> not found '
-                                     'for service <%(service)s>')
-                                   % {'hostname': parsed_args.targetname,
-                                      'service': parsed_args.gate_id})
-
-
-
-class ListTarget(command.Lister):
-    """List Knob targets."""
-
-    log = logging.getLogger(__name__ + ".ListTarget")
-
-    def get_parser(self, prog_name):
-        parser = super(ListTarget, self).get_parser(prog_name)
-        parser.add_argument(
-            "--all-projects",
-            action='store_true',
-            default=False,
-            help="Request facet terms for all projects (admin only)"
-        )
-        return parser
-
-    def take_action(self, parsed_args):
-        self.log.debug("take_action(%s)", parsed_args)
-
-        params = {
-            "all_projects": parsed_args.all_projects
-        }
-        obj_list = self.app.client_manager.knob.targets.list(**params)
-                
-        if not obj_list:
-            return [], []
-        columns = obj_list[0]._get_generic_columns()
-        data = (obj._get_generic_data() for obj in obj_list)
-        return columns, data
