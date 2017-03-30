@@ -9,9 +9,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from six.moves.urllib import parse
-
-from knobclient.common import utils
 
 class TargetsManager(object):
 
@@ -23,26 +20,9 @@ class TargetsManager(object):
         super(TargetsManager, self).__init__()
         self.client = client
 
-    def list(self, **kwargs):
-        """Get a list of targets."""
-        url = '/targets?%s' % parse.urlencode(kwargs)
-        body = self.client.get(url)
-        return body['targets']
-
-    def create(self, **kwargs):
-        """Create a target."""
-        body = self.client.post('/targets', data=kwargs)
-        return body['targets']
+    def generate_config(self, **kwargs):
+        """generate config for target."""
+        body = self.client.post('/target_config', data=kwargs)
+        return body['config']
     
-    def delete(self, target_id):
-        """Delete a target."""
-        self.client.delete("/targets/%s" % target_id)
-
-    def get(self, target_id):
-        """Get the details for a specific target.
-
-        :param target_id: ID of the target
-        """
-        body = self.client.get('/targets/%s' % target_id)
-        return body['targets']
         
