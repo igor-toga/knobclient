@@ -49,12 +49,12 @@ class GatesManager(object):
 
     def add_target(self, gate, **kwargs):
         """Add target VM to list of allowed targets on gate"""
-        body = self.client.post("/gates/%s/targets", data=kwargs)
+        body = self.client.post("/gates/%s/targets" % gate, data=kwargs)
         return body['targets']
         
-    def remove_target(self, gate_id, target):
+    def remove_target(self, gate_id, target_id):
         """Delete a target from gate."""
-        self.client.delete("/gates/%s/targets/%s" % (gate_id, target))
+        self.client.delete("/gates/%s/targets/%s" % (gate_id, target_id))
         
     def list_targets(self, gate, **kwargs):
         """Get a list of targets on gate. """
@@ -64,7 +64,7 @@ class GatesManager(object):
     
     def add_key(self, gate, **kwargs):
         """Add an authorized key to keys on gate"""
-        body = self.client.post("/gates/%s/keys", data=kwargs)
+        body = self.client.post("/gates/%s/keys" % gate, data=kwargs)
         return body['keys']
         
     def remove_key(self, gate_id, key):

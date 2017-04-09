@@ -47,13 +47,7 @@ class CreateGate(command.ShowOne):
             metavar='<public-net-id>',
             help=_('Network to build gate server on it')
         )
-        
-        parser.add_argument(
-            '--key',
-            metavar='<key>',
-            help=_('Public key required to connect to gate host')
-        )
-        
+                
         return parser
 
     def take_action(self, parsed_args):
@@ -65,10 +59,6 @@ class CreateGate(command.ShowOne):
             'net_id': parsed_args.net_id,
             'public_net_id': parsed_args.public_net_id
             }
-        if parsed_args.key:
-            fields['key'] = parsed_args.key
-            
-        
             
         try:
             gate = knob_client.gates.create(**fields)
@@ -184,8 +174,8 @@ class GateAddTarget(command.Command):
         )
         
         parser.add_argument(
-            '--target-name',
-            metavar='<target_name>',
+            'name',
+            metavar='<name>',
             help=_('target to add to specified gate')
         )
         parser.add_argument(
@@ -203,7 +193,7 @@ class GateAddTarget(command.Command):
         fields = {
             'gate_id': parsed_args.gate_id,
             'server_id': parsed_args.server_id,
-            'target_name': parsed_args.target_name,
+            'name': parsed_args.name,
             'routable': parsed_args.routable,
             }
         try:
@@ -215,7 +205,7 @@ class GateAddTarget(command.Command):
                 
         print ('Target VM: %(target)s add to Gate: %(gate)s' % 
                {'target': parsed_args.server_id, 'gate': parsed_args.gate_id})
-        return target['id']
+        return target['name']
 
             
 class GateRemoveTarget(command.Command):
@@ -231,8 +221,8 @@ class GateRemoveTarget(command.Command):
             help=_('gate to delete')
         )
         parser.add_argument(
-            'server_id',
-            metavar='<target>',
+            'target_id',
+            metavar='<target_id>',
             help=_('target to add to specified gate')
         )
         return parser
@@ -257,13 +247,18 @@ class GateListTargets(command.Lister):
 
     def get_parser(self, prog_name):
         parser = super(GateListTargets, self).get_parser(prog_name)
+        parser.add_argument(
+            'gate_id',
+            metavar='<gate_id>',
+            help=_('gate to delete')
+        )
         return parser
 
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
         params = {}
             
-        targets = self.app.client_manager.knob.gates.list_targets(gate, **params)
+        targets = self.app.client_manager.knob.gates.list_targets(parsed_args.gate_id, **params)
         
         columns = ['server_id','name', 'gate_id','routable']
         return (
@@ -279,11 +274,6 @@ class GateAddKey(command.Command):
     def get_parser(self, prog_name):
         parser = super(GateAddKey, self).get_parser(prog_name)
         parser.add_argument(
-            '--name',
-            metavar='<name>',
-            help=_('Key name')
-        )
-        parser.add_argument(
             'gate_id',
             metavar='<gate_id>',
             help=_('gate to add public key to it')
@@ -293,6 +283,12 @@ class GateAddKey(command.Command):
             metavar='<key_file>',
             help=_('public key file path')
         )
+        parser.add_argument(
+            'name',
+            metavar='<name>',
+            help=_('Key name')
+        )
+
         return parser
     
     def take_action(self, parsed_args):
@@ -310,8 +306,7 @@ class GateAddKey(command.Command):
             'key_content': key_content,
             }
         try:
-            key = knob_client.gates.add_key(parsed_args.gate_id, 
-                                                  **fields)
+            key = knob_client.gates.add_key(parsed_args.gate_id, **fields)
         except exceptions.HTTPNotFound:
             raise exceptions.CommandError(_('Key is not added to gate: %s')
                                    % parsed_args.gate_id)

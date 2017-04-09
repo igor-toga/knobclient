@@ -18,7 +18,6 @@ from keystoneauth1 import adapter
 from keystoneauth1 import session as ks_session
 from oslo_serialization import jsonutils
 
-from knobclient.v1 import associates
 from knobclient.v1 import targets
 from knobclient.v1 import gates
 from knobclient.v1 import services
@@ -182,7 +181,6 @@ class Client(object):
 
         httpclient = _HTTPClient(session=session, *args, **kwargs)
 
-        self.associates = associates.AssociatesManager(httpclient)
         self.gates = gates.GatesManager(httpclient)
         self.targets = targets.TargetsManager(httpclient)
         self.services = services.ServiceManager(httpclient)
