@@ -357,8 +357,8 @@ class GateListKeys(command.Lister):
     def get_parser(self, prog_name):
         parser = super(GateListKeys, self).get_parser(prog_name)
         parser.add_argument(
-            "gate",
-            metavar='<gate>',
+            "gate_id",
+            metavar='<gate_id>',
             help=_("Request facet terms for all projects (admin only)")
         )
         return parser
@@ -367,7 +367,7 @@ class GateListKeys(command.Lister):
         self.log.debug("take_action(%s)", parsed_args)
         params = {}
             
-        keys = self.app.client_manager.knob.gates.list_keys(gate,**params)
+        keys = self.app.client_manager.knob.gates.list_keys(parsed_args.gate_id,**params)
         
         columns = ['id','name', 'gate_id', 'created_at']
         return (

@@ -76,7 +76,7 @@ class GenerateConfig(command.Command):
             raise exceptions.CommandError(_('Target not found: %s')
                                    % parsed_args.target_id)
                 
-        return target['config']
+        return target
 
 
 

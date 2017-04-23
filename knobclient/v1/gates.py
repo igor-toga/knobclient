@@ -71,8 +71,8 @@ class GatesManager(object):
         """Delete an authorized key from gate."""
         self.client.delete("/gates/%s/keys/%s" % (gate_id, key))
         
-    def list_keys(self, gate, **kwargs):
+    def list_keys(self, gate_id, **kwargs):
         """Get a list of authorized keys on gate. """
-        url = '/gates/%s/keys?%s' % (gate, parse.urlencode(kwargs))
+        url = '/gates/%s/keys?%s' % (gate_id, parse.urlencode(kwargs))
         body = self.client.get(url)
         return body['keys']
