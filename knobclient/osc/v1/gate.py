@@ -118,7 +118,7 @@ class ListGate(command.Lister):
         }
         gates = self.app.client_manager.knob.gates.list(**params)
         
-        columns = ['id', 'name', 'server_id', 'fip_id','tenant_id']
+        columns = ['id', 'name', 'server_id', 'fip_id', 'port_id', 'tenant_id']
         return (
             columns,
             (utils.get_dict_properties(s, columns) for s in gates)
