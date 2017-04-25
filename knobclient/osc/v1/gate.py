@@ -47,6 +47,28 @@ class CreateGate(command.ShowOne):
             metavar='<public-net-id>',
             help=_('Network to build gate server on it')
         )
+        
+        parser.add_argument(
+            '--image',
+            metavar='<image>',
+            required=True,
+            help=_('Image to boot from')
+        )
+        
+        parser.add_argument(
+            '--flavor',
+            metavar='<flavor>',
+            required=True,
+            help=_('Create server with this flavor (name or ID)'),
+        )
+        parser.add_argument(
+            '--security-group',
+            metavar='<security-group-name>',
+            action='append',
+            default='default',
+            help=_('Security group to assign to this server (name or ID) '
+                   '(repeat option to set multiple groups)')
+        )
                 
         return parser
 
@@ -57,9 +79,12 @@ class CreateGate(command.ShowOne):
         fields = {
             'name': parsed_args.name,
             'net_id': parsed_args.net_id,
-            'public_net_id': parsed_args.public_net_id
+            'public_net_id': parsed_args.public_net_id,
+            'image': parsed_args.image,
+            'flavor': parsed_args.flavor,
+            'security_groups': parsed_args.security_group
             }
-            
+        
         try:
             gate = knob_client.gates.create(**fields)
         except exceptions.HTTPNotFound:

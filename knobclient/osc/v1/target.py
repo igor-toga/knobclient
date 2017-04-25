@@ -14,6 +14,7 @@
 """Knob v1 target configuration"""
 
 import logging
+import sys
 
 from osc_lib.command import command
 from osc_lib import utils
@@ -76,7 +77,8 @@ class GenerateConfig(command.Command):
             raise exceptions.CommandError(_('Target not found: %s')
                                    % parsed_args.target_id)
                 
-        return target
+        sys.stdout.write(target)
+        return
 
 
 
