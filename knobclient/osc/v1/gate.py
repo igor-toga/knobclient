@@ -69,7 +69,7 @@ class CreateGate(command.ShowOne):
             help=_('Security group to assign to this server (name or ID) '
                    '(repeat option to set multiple groups)')
         )
-                
+        
         return parser
 
     def take_action(self, parsed_args):
@@ -82,7 +82,7 @@ class CreateGate(command.ShowOne):
             'public_net_id': parsed_args.public_net_id,
             'image': parsed_args.image,
             'flavor': parsed_args.flavor,
-            'security_groups': parsed_args.security_group
+            'security_groups': parsed_args.security_group,
             }
         
         try:
@@ -134,6 +134,7 @@ class ListGate(command.Lister):
             default=False,
             help=_("Request facet terms for all projects (admin only)")
         )
+                
         return parser
 
     def take_action(self, parsed_args):

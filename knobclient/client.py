@@ -12,7 +12,9 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import logging
+import os
 
 from keystoneauth1 import adapter
 from keystoneauth1 import session as ks_session
@@ -64,6 +66,10 @@ class _HTTPClient(adapter.Adapter):
         headers = kwargs.setdefault('headers', {})
         headers.setdefault('Content-Type', 'application/json')
         headers.setdefault('Accept', 'application/json')
+        headers.setdefault('X-Project-Name', os.environ['OS_PROJECT_NAME'])
+        headers.setdefault('X-User-Name', os.environ['OS_USERNAME'])
+        headers.setdefault('X-User-Domain-Id', os.environ['OS_USER_DOMAIN_ID'])
+        headers.setdefault('X-Project-Domain-Id', os.environ['OS_PROJECT_DOMAIN_ID'])
 
         return super(_HTTPClient, self).get(*args, **kwargs).json()
 
@@ -72,6 +78,11 @@ class _HTTPClient(adapter.Adapter):
         headers = kwargs.setdefault('headers', {})
         headers.setdefault('Content-Type', 'application/json')
         headers.setdefault('Accept', 'application/json')
+        headers.setdefault('X-Project-Name', os.environ['OS_PROJECT_NAME'])
+        headers.setdefault('X-User-Name', os.environ['OS_USERNAME'])
+        headers.setdefault('X-User-Domain-Id', os.environ['OS_USER_DOMAIN_ID'])
+        headers.setdefault('X-Project-Domain-Id', os.environ['OS_PROJECT_DOMAIN_ID'])
+
 
         if 'data' in kwargs:
             kwargs['data'] = jsonutils.dumps(kwargs['data'])
@@ -81,6 +92,11 @@ class _HTTPClient(adapter.Adapter):
     def delete(self, *args, **kwargs):
         headers = kwargs.setdefault('headers', {})
         headers.setdefault('Content-Type', 'application/octet-stream')
+        headers.setdefault('X-Project-Name', os.environ['OS_PROJECT_NAME'])
+        headers.setdefault('X-User-Name', os.environ['OS_USERNAME'])
+        headers.setdefault('X-User-Domain-Id', os.environ['OS_USER_DOMAIN_ID'])
+        headers.setdefault('X-Project-Domain-Id', os.environ['OS_PROJECT_DOMAIN_ID'])
+
         
         return super(_HTTPClient, self).delete(*args, **kwargs).json()
         
