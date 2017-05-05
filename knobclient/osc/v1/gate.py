@@ -38,12 +38,14 @@ class CreateGate(command.ShowOne):
         
         parser.add_argument(
             '--net-id',
+            required=True,
             metavar='<net-id>',
             help=_('Network to build gate server on it')
         )
         
         parser.add_argument(
             '--public-net-id',
+            required=True,
             metavar='<public-net-id>',
             help=_('Network to build gate server on it')
         )
@@ -62,8 +64,6 @@ class CreateGate(command.ShowOne):
         parser.add_argument(
             '--security-group',
             metavar='<security-group-name>',
-            action='append',
-            default='default',
             help=_('Security group to assign to this server (name or ID) '
                    '(repeat option to set multiple groups)')
         )
@@ -78,11 +78,15 @@ class CreateGate(command.ShowOne):
             'name': parsed_args.name,
             'net_id': parsed_args.net_id,
             'public_net_id': parsed_args.public_net_id,
-            'image': parsed_args.image,
-            'flavor': parsed_args.flavor,
-            'security_groups': parsed_args.security_group,
             }
-        
+        if parsed_args.flavor:
+            fields['flavor'] = parsed_args.flavor
+        if parsed_args.image:
+            fields['image'] = parsed_args.image
+        if parsed_args.security_group:
+            fields['security_groups'] = parsed_args.security_group
+       
+        print (fields) 
         try:
             gate = knob_client.gates.create(**fields)
         except exceptions.HTTPNotFound:
