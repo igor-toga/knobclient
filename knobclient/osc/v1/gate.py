@@ -51,14 +51,12 @@ class CreateGate(command.ShowOne):
         parser.add_argument(
             '--image',
             metavar='<image>',
-            required=True,
             help=_('Image to boot from')
         )
         
         parser.add_argument(
             '--flavor',
             metavar='<flavor>',
-            required=True,
             help=_('Create server with this flavor (name or ID)'),
         )
         parser.add_argument(
